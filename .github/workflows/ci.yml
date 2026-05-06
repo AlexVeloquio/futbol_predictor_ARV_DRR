@@ -1,0 +1,34 @@
+name: CI Pipeline
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main]
+
+jobs:
+  lint-and-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install dependencies
+        run: |
+          pip install --upgrade pip
+          pip install -r src/training/requirements.txt
+          pip install -r src/inference/requirements.txt
+          pip install pytest flake8 black isort
+      - name: Lint
+        run: flake8 src/ tests/ --max-line-length=120
+      - name: Tests
+        run: pytest tests/ -v --tb=short
+
+  docker-build:
+    runs-on: ubuntu-latest
+    needs: lint-and-test
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build inference image
+        run: docker build -t futbol-predictor-inference:test -f src/inference/Dockerfile .

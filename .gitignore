@@ -1,0 +1,43 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+venv/
+.venv/
+.env
+
+# ML Artifacts
+*.pkl
+*.joblib
+models/
+!models/.gitkeep
+
+# Data
+data/raw/*.csv
+data/processed/*.csv
+!data/raw/.gitkeep
+!data/processed/.gitkeep
+
+# IDE
+.vscode/
+.idea/
+*.swp
+.DS_Store
+
+# Docker
+docker-compose.override.yml
+
+# AWS / Terraform
+.terraform/
+terraform.tfstate*
+*.tfvars
+!*.tfvars.example
+
+# Testing
+.coverage
+htmlcov/
+.pytest_cache/
+.mypy_cache/
+
+# Misc
+*.log
