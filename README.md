@@ -3,7 +3,7 @@
 > Modelo de ML para predecir resultados de la Liga MX (Victoria Local, Empate, Victoria Visitante).  
 > Seleccionas dos equipos y el modelo te dice quién tiene más probabilidad de ganar.
 
-**Materia:** Infraestructura y Desarrollo Continuo — ITESO  
+**Materia:** Integración de Servicios de Aprendizaje Automatico — ITESO  
 **Equipo:** Alejandro Rodríguez Veloquio · Diego Rosales Rojas
 
 ---
