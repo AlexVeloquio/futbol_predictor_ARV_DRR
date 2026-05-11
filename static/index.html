@@ -1,0 +1,607 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Predictor Liga MX</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800;900&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        :root {
+            --bg: #0a0f1a;
+            --surface: #111827;
+            --surface2: #1a2332;
+            --border: #1e2d3d;
+            --green: #00e676;
+            --green-dim: #00c853;
+            --green-glow: rgba(0, 230, 118, 0.15);
+            --amber: #ffc107;
+            --red: #ff5252;
+            --blue: #448aff;
+            --text: #e8eaed;
+            --text-dim: #8892a4;
+            --text-muted: #4a5568;
+        }
+
+        body {
+            font-family: 'Outfit', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* Field pattern background */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background:
+                radial-gradient(ellipse at 50% 0%, rgba(0,230,118,0.06) 0%, transparent 60%),
+                repeating-linear-gradient(0deg, transparent, transparent 40px, rgba(0,230,118,0.02) 40px, rgba(0,230,118,0.02) 41px);
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .container {
+            max-width: 680px;
+            margin: 0 auto;
+            padding: 40px 20px;
+            position: relative;
+            z-index: 1;
+        }
+
+        /* Header */
+        header {
+            text-align: center;
+            margin-bottom: 48px;
+        }
+
+        header .badge {
+            display: inline-block;
+            font-family: 'Space Mono', monospace;
+            font-size: 11px;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            color: var(--green);
+            background: var(--green-glow);
+            border: 1px solid rgba(0,230,118,0.2);
+            padding: 6px 16px;
+            border-radius: 20px;
+            margin-bottom: 20px;
+        }
+
+        header h1 {
+            font-size: 42px;
+            font-weight: 900;
+            letter-spacing: -1px;
+            line-height: 1.1;
+            margin-bottom: 12px;
+        }
+
+        header h1 span {
+            background: linear-gradient(135deg, var(--green), var(--blue));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        header p {
+            color: var(--text-dim);
+            font-size: 15px;
+            font-weight: 300;
+        }
+
+        /* Match Card */
+        .match-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 32px;
+            margin-bottom: 24px;
+        }
+
+        .teams-grid {
+            display: grid;
+            grid-template-columns: 1fr auto 1fr;
+            gap: 16px;
+            align-items: end;
+            margin-bottom: 28px;
+        }
+
+        .team-select label {
+            display: block;
+            font-family: 'Space Mono', monospace;
+            font-size: 10px;
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+            color: var(--text-muted);
+            margin-bottom: 10px;
+        }
+
+        .team-select select {
+            width: 100%;
+            padding: 14px 16px;
+            background: var(--surface2);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            color: var(--text);
+            font-family: 'Outfit', sans-serif;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%238892a4' stroke-width='1.5' fill='none'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 16px center;
+            transition: border-color 0.2s;
+        }
+
+        .team-select select:focus {
+            outline: none;
+            border-color: var(--green);
+            box-shadow: 0 0 0 3px var(--green-glow);
+        }
+
+        .team-select select:hover {
+            border-color: rgba(0,230,118,0.4);
+        }
+
+        .vs-badge {
+            font-family: 'Space Mono', monospace;
+            font-size: 13px;
+            font-weight: 700;
+            color: var(--text-muted);
+            background: var(--bg);
+            border: 1px solid var(--border);
+            width: 44px;
+            height: 44px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            margin-bottom: 0;
+        }
+
+        .predict-btn {
+            width: 100%;
+            padding: 16px;
+            background: linear-gradient(135deg, var(--green-dim), var(--green));
+            border: none;
+            border-radius: 10px;
+            color: var(--bg);
+            font-family: 'Outfit', sans-serif;
+            font-size: 16px;
+            font-weight: 800;
+            letter-spacing: 0.5px;
+            cursor: pointer;
+            transition: all 0.25s;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .predict-btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 8px 30px rgba(0,230,118,0.3);
+        }
+
+        .predict-btn:active {
+            transform: translateY(0);
+        }
+
+        .predict-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .predict-btn .spinner {
+            display: none;
+            width: 18px;
+            height: 18px;
+            border: 2px solid rgba(10,15,26,0.3);
+            border-top-color: var(--bg);
+            border-radius: 50%;
+            animation: spin 0.6s linear infinite;
+            margin-right: 8px;
+            vertical-align: middle;
+        }
+
+        .predict-btn.loading .spinner { display: inline-block; }
+        .predict-btn.loading .btn-text { opacity: 0.7; }
+
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        /* Result */
+        .result {
+            display: none;
+            animation: slideUp 0.4s ease-out;
+        }
+
+        .result.visible { display: block; }
+
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .result-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            overflow: hidden;
+        }
+
+        .result-header {
+            padding: 24px 32px;
+            text-align: center;
+            border-bottom: 1px solid var(--border);
+            background: linear-gradient(180deg, var(--surface2), var(--surface));
+        }
+
+        .result-matchup {
+            font-size: 14px;
+            color: var(--text-dim);
+            font-weight: 300;
+            margin-bottom: 12px;
+        }
+
+        .result-label {
+            font-size: 28px;
+            font-weight: 900;
+            margin-bottom: 4px;
+        }
+
+        .result-label.home-win { color: var(--green); }
+        .result-label.draw { color: var(--amber); }
+        .result-label.away-win { color: var(--blue); }
+
+        .result-sublabel {
+            font-family: 'Space Mono', monospace;
+            font-size: 11px;
+            color: var(--text-muted);
+            letter-spacing: 1px;
+        }
+
+        .result-body {
+            padding: 28px 32px;
+        }
+
+        .prob-row {
+            display: grid;
+            grid-template-columns: 110px 1fr 56px;
+            align-items: center;
+            gap: 14px;
+            margin-bottom: 16px;
+        }
+
+        .prob-row:last-child { margin-bottom: 0; }
+
+        .prob-label {
+            font-size: 13px;
+            font-weight: 600;
+            text-align: right;
+        }
+
+        .prob-bar-track {
+            height: 28px;
+            background: var(--bg);
+            border-radius: 6px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .prob-bar-fill {
+            height: 100%;
+            border-radius: 6px;
+            transition: width 0.8s cubic-bezier(0.22, 1, 0.36, 1);
+            position: relative;
+        }
+
+        .prob-bar-fill.home { background: linear-gradient(90deg, rgba(0,230,118,0.3), var(--green)); }
+        .prob-bar-fill.draw { background: linear-gradient(90deg, rgba(255,193,7,0.3), var(--amber)); }
+        .prob-bar-fill.away { background: linear-gradient(90deg, rgba(68,138,255,0.3), var(--blue)); }
+
+        .prob-bar-fill.winner { box-shadow: 0 0 16px rgba(0,230,118,0.3); }
+
+        .prob-pct {
+            font-family: 'Space Mono', monospace;
+            font-size: 14px;
+            font-weight: 700;
+            text-align: right;
+        }
+
+        /* H2H info */
+        .h2h-info {
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .h2h-info .tag {
+            font-family: 'Space Mono', monospace;
+            font-size: 11px;
+            color: var(--text-muted);
+            letter-spacing: 1px;
+        }
+
+        .h2h-info .value {
+            font-family: 'Space Mono', monospace;
+            font-size: 13px;
+            font-weight: 700;
+            color: var(--text-dim);
+        }
+
+        /* Error */
+        .error {
+            display: none;
+            background: rgba(255,82,82,0.1);
+            border: 1px solid rgba(255,82,82,0.3);
+            color: var(--red);
+            padding: 14px 20px;
+            border-radius: 10px;
+            font-size: 14px;
+            margin-bottom: 24px;
+            animation: slideUp 0.3s ease-out;
+        }
+
+        .error.visible { display: block; }
+
+        /* Footer */
+        footer {
+            text-align: center;
+            margin-top: 48px;
+            padding-top: 24px;
+            border-top: 1px solid var(--border);
+        }
+
+        footer p {
+            font-size: 12px;
+            color: var(--text-muted);
+            font-weight: 300;
+        }
+
+        footer a {
+            color: var(--text-dim);
+            text-decoration: none;
+        }
+
+        /* Mobile */
+        @media (max-width: 520px) {
+            .container { padding: 24px 16px; }
+            header h1 { font-size: 30px; }
+            .teams-grid { grid-template-columns: 1fr; gap: 12px; }
+            .vs-badge { margin: 0 auto; }
+            .match-card { padding: 24px 20px; }
+            .result-body { padding: 20px; }
+            .prob-row { grid-template-columns: 80px 1fr 48px; gap: 8px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+
+        <header>
+            <div class="badge">⚽ Machine Learning</div>
+            <h1>Predictor <span>Liga MX</span></h1>
+            <p>Selecciona dos equipos y el modelo predecirá el resultado</p>
+        </header>
+
+        <div class="match-card">
+            <div class="teams-grid">
+                <div class="team-select">
+                    <label>Equipo Local</label>
+                    <select id="home-team">
+                        <option value="">Seleccionar...</option>
+                    </select>
+                </div>
+
+                <div class="vs-badge">VS</div>
+
+                <div class="team-select">
+                    <label>Equipo Visitante</label>
+                    <select id="away-team">
+                        <option value="">Seleccionar...</option>
+                    </select>
+                </div>
+            </div>
+
+            <button class="predict-btn" id="predict-btn" onclick="predict()">
+                <span class="spinner"></span>
+                <span class="btn-text">Predecir resultado</span>
+            </button>
+        </div>
+
+        <div class="error" id="error"></div>
+
+        <div class="result" id="result">
+            <div class="result-card">
+                <div class="result-header">
+                    <div class="result-matchup" id="result-matchup"></div>
+                    <div class="result-label" id="result-label"></div>
+                    <div class="result-sublabel" id="result-sublabel"></div>
+                </div>
+                <div class="result-body">
+                    <div class="prob-row">
+                        <div class="prob-label" style="color: var(--green)">Victoria Local</div>
+                        <div class="prob-bar-track">
+                            <div class="prob-bar-fill home" id="bar-home" style="width: 0%"></div>
+                        </div>
+                        <div class="prob-pct" id="pct-home">0%</div>
+                    </div>
+                    <div class="prob-row">
+                        <div class="prob-label" style="color: var(--amber)">Empate</div>
+                        <div class="prob-bar-track">
+                            <div class="prob-bar-fill draw" id="bar-draw" style="width: 0%"></div>
+                        </div>
+                        <div class="prob-pct" id="pct-draw">0%</div>
+                    </div>
+                    <div class="prob-row">
+                        <div class="prob-label" style="color: var(--blue)">Victoria Visit.</div>
+                        <div class="prob-bar-track">
+                            <div class="prob-bar-fill away" id="bar-away" style="width: 0%"></div>
+                        </div>
+                        <div class="prob-pct" id="pct-away">0%</div>
+                    </div>
+                    <div class="h2h-info">
+                        <span class="tag">HEAD TO HEAD</span>
+                        <span class="value" id="h2h-value"></span>
+                        <span class="tag">MODELO</span>
+                        <span class="value" id="model-value"></span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <footer>
+            <p>Random Forest Classifier · scikit-learn · Liga MX 2016-2024</p>
+            <p style="margin-top:6px"><a href="https://github.com/AlexVeloquio/futbol_predictor_ARV_DRR">ITESO — Integración de Servicios de Aprendizaje Automático</a></p>
+        </footer>
+
+    </div>
+
+    <script>
+        const API = '';
+        const homeSelect = document.getElementById('home-team');
+        const awaySelect = document.getElementById('away-team');
+
+        // Load teams on page load
+        async function loadTeams() {
+            try {
+                const res = await fetch(`${API}/api/teams`);
+                const data = await res.json();
+
+                data.teams.forEach(team => {
+                    homeSelect.add(new Option(team, team));
+                    awaySelect.add(new Option(team, team));
+                });
+            } catch (err) {
+                showError('No se pudo conectar al servidor. ¿Está corriendo uvicorn?');
+            }
+        }
+
+        async function predict() {
+            const home = homeSelect.value;
+            const away = awaySelect.value;
+
+            // Validate
+            if (!home || !away) {
+                showError('Selecciona ambos equipos.');
+                return;
+            }
+            if (home === away) {
+                showError('Los equipos deben ser diferentes.');
+                return;
+            }
+
+            hideError();
+            hideResult();
+
+            const btn = document.getElementById('predict-btn');
+            btn.classList.add('loading');
+            btn.disabled = true;
+
+            try {
+                const res = await fetch(`${API}/api/predict`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ home_team: home, away_team: away }),
+                });
+
+                const data = await res.json();
+
+                if (data.error) {
+                    showError(data.error);
+                    return;
+                }
+
+                showResult(data);
+            } catch (err) {
+                showError('Error de conexión con el servidor.');
+            } finally {
+                btn.classList.remove('loading');
+                btn.disabled = false;
+            }
+        }
+
+        function showResult(data) {
+            const probs = data.probabilities;
+            const hw = probs['Home Win'];
+            const dw = probs['Draw'];
+            const aw = probs['Away Win'];
+
+            // Matchup
+            document.getElementById('result-matchup').textContent =
+                `${data.home_team}  vs  ${data.away_team}`;
+
+            // Label
+            const labelEl = document.getElementById('result-label');
+            labelEl.textContent = data.label_es;
+            labelEl.className = 'result-label';
+            if (data.prediction === 0) labelEl.classList.add('home-win');
+            else if (data.prediction === 1) labelEl.classList.add('draw');
+            else labelEl.classList.add('away-win');
+
+            document.getElementById('result-sublabel').textContent = data.label;
+
+            // Bars (animate after a tiny delay)
+            const maxProb = Math.max(hw, dw, aw);
+
+            setTimeout(() => {
+                setBar('home', hw, hw === maxProb);
+                setBar('draw', dw, dw === maxProb);
+                setBar('away', aw, aw === maxProb);
+            }, 50);
+
+            // H2H & model
+            document.getElementById('h2h-value').textContent = data.h2h_score.toFixed(2);
+            document.getElementById('model-value').textContent = data.model.replace('_', ' ');
+
+            // Show
+            const result = document.getElementById('result');
+            result.classList.add('visible');
+            result.style.animation = 'none';
+            result.offsetHeight; // trigger reflow
+            result.style.animation = '';
+        }
+
+        function setBar(id, value, isWinner) {
+            const bar = document.getElementById(`bar-${id}`);
+            const pct = document.getElementById(`pct-${id}`);
+            bar.style.width = `${(value * 100).toFixed(0)}%`;
+            bar.classList.toggle('winner', isWinner);
+            pct.textContent = `${(value * 100).toFixed(1)}%`;
+        }
+
+        function showError(msg) {
+            const el = document.getElementById('error');
+            el.textContent = msg;
+            el.classList.add('visible');
+        }
+
+        function hideError() {
+            document.getElementById('error').classList.remove('visible');
+        }
+
+        function hideResult() {
+            document.getElementById('result').classList.remove('visible');
+            // Reset bars
+            ['home', 'draw', 'away'].forEach(id => {
+                document.getElementById(`bar-${id}`).style.width = '0%';
+            });
+        }
+
+        // Allow Enter key
+        document.addEventListener('keydown', e => {
+            if (e.key === 'Enter') predict();
+        });
+
+        loadTeams();
+    </script>
+</body>
+</html>

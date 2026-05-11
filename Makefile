@@ -82,6 +82,12 @@ deploy: docker-build ## Deploy: imagen a ECR + modelo a S3 + update Lambda
 		--image-uri $(ECR_URI)/$(ECR_REPO)-inference:latest
 	@echo "✅ Deploy completado."
 
+web: ## Abre la interfaz web en http://localhost:8000
+	uvicorn app:app --reload --host 0.0.0.0 --port 8000
+
+setup-web: ## Instala dependencias del servidor web
+	pip install -r requirements-web.txt
+
 # ============================================================
 #  Limpieza
 # ============================================================
